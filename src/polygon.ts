@@ -14,36 +14,6 @@ interface IVertex {
 }
 
 function createVertex(
-  polygonId: number,
-  coord: IVertex,
-  vertexNo: number,
-  anchor?: ILinkedVertex
-): {
-  vertex: ILinkedVertex;
-  anchor?: ILinkedVertex;
-} {
-  const vertex = {
-    ...coord,
-    vertexNo,
-    polygonNo: polygonId,
-    leftSibling: anchor,
-    rightSibling: undefined,
-  };
-
-  if (anchor) {
-    const anchorClone = { ...anchor };
-    anchorClone.rightSibling = vertex;
-
-    return {
-      vertex,
-      anchor: anchorClone,
-    };
-  }
-
-  return { vertex };
-}
-
-function createVertexV2(
   vertices: ILinkedVertex[],
   polygonId: number,
   coord: IVertex,
@@ -62,11 +32,12 @@ function createVertexV2(
   const pointOfIntersection = getVertexAtIntersection(vertices, coord);
 
   if (!pointOfIntersection) {
-    oldAnchorClone && (oldAnchorClone.rightSibling = newVertex);
-    const newVertices = vertices.map(function replaceAnchorVertex(oldVertex) {
-      return oldVertex.vertexNo == oldAnchorClone?.vertexNo
-        ? oldAnchorClone
-        : oldVertex;
+    const newVertices = vertices.map(function setAnchorRightSiblingToNewVertex(oldVertex) {
+      if (oldVertex.vertexNo == oldAnchor?.vertexNo) {
+        oldVertex.rightSibling = newVertex
+      }
+
+      return oldVertex
     });
     newVertices.push(newVertex);
 
@@ -90,45 +61,13 @@ function createVertexV2(
   return { newVertices, newAnchor: pointOfIntersection };
 }
 
-function addVertex(
-  vertices: ILinkedVertex[],
-  newVertex: ILinkedVertex,
-  anchor?: ILinkedVertex
-) {
-  const pointOfIntersection = getVertexAtIntersection(vertices, newVertex);
-
-  if (!pointOfIntersection) {
-    const newVertices = vertices.map(function replaceAnchorVertex(oldVertex) {
-      return oldVertex.vertexNo == anchor?.vertexNo ? anchor : oldVertex;
-    });
-    newVertices.push(newVertex);
-
-    return { newVertices, newAnchor: newVertex };
-  }
-
-  const newVertices = vertices.map(function linkAnchorToIntersectingVertex(
-    oldVertex
-  ) {
-    if (oldVertex.vertexNo == anchor?.vertexNo) {
-      const temporalVertex = { ...oldVertex };
-      temporalVertex.rightSibling = pointOfIntersection;
-
-      return temporalVertex;
-    }
-
-    return oldVertex;
-  });
-
-  return { newVertices, newAnchor: pointOfIntersection };
-}
-
 function createVertexNo(vertices: ILinkedVertex[]) {
   const lastVertex = Math.max(...vertices.map(({ vertexNo }) => vertexNo));
 
   return isFinite(lastVertex) ? lastVertex + 1 : 0;
 }
 
-function draw(vertices: ILinkedVertex[], ctx: CanvasRenderingContext2D | null) {
+function draw(vertices: ILinkedVertex[], ctx: CanvasRenderingContext2D | null, strokeWidth?: number, color?: string) {
   const sortedVertices = vertices.sort(
     (vertexA, vertexB) => vertexA.vertexNo - vertexB.vertexNo
   );
@@ -150,7 +89,8 @@ function draw(vertices: ILinkedVertex[], ctx: CanvasRenderingContext2D | null) {
     }
   });
 
-  ctx.strokeStyle = 'black';
+  ctx.strokeStyle = color ?? 'black';
+  ctx.lineWidth = strokeWidth ?? 1
   ctx.stroke();
 }
 
@@ -181,6 +121,4 @@ export const polygon = {
   getXCord,
   getYCord,
   getVertexAtIntersection,
-  addVertex,
-  createVertexV2,
 };

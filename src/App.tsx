@@ -29,11 +29,9 @@ function App() {
             drawingAnchor?.polygonNo ?? getPolygonNo(Object.keys(polygons));
 
           let currentPolygonVertices = polygons?.[currentPolygonNo] ?? [];
-          console.log('currentPolygonVertices ', currentPolygonVertices);
           const vertexNo = polygon.createVertexNo(currentPolygonVertices);
 
-          console.log('vertex no', vertexNo);
-          const { newAnchor, newVertices } = polygon.createVertexV2(
+          const { newAnchor, newVertices } = polygon.createVertex(
             currentPolygonVertices,
             1,
             coord,
@@ -42,10 +40,8 @@ function App() {
           );
           polygons[currentPolygonNo] = newVertices;
 
-          console.log('newVertices ', newVertices);
-
           setCanvasState({ polygons: polygons, drawingAnchor: newAnchor });
-          polygon.draw(newVertices, e.currentTarget.getContext('2d'));
+          polygon.draw(newVertices, e.currentTarget.getContext('2d'), 3, "red");
         }}
       ></canvas>
     </>
